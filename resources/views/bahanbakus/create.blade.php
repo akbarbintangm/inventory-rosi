@@ -28,7 +28,7 @@
                                     accept="image/*"
                                     id="image"
                                     name="fotobahan"
-                                    class="form-control @error('product_image') is-invalid @enderror"
+                                    class="form-control @error('fotobahan') is-invalid @enderror"
                                     onchange="previewImage();"
                                 >
 
@@ -63,7 +63,7 @@
                                                 label="Nama Bahan"
                                                  id="namabahan"
                                                  placeholder="Masukkan nama bahan"
-                                                 value="{{ old('namanbahan') }}"
+                                                 value="{{ old('namabahan') }}"
                                         />
                                     </div>
 
@@ -117,8 +117,8 @@
                                             </label>
 
                                             @if ($units->count() === 1)
-                                                <select name="category_id" id="category_id"
-                                                        class="form-select @error('category_id') is-invalid @enderror"
+                                                <select name="unit_id" id="unit_id"
+                                                        class="form-select @error('unit_id') is-invalid @enderror"
                                                         readonly
                                                 >
                                                     @foreach ($units as $unit)
@@ -174,7 +174,7 @@
                                                  name="jenisbahan"
                                                  id="jenisbahan"
                                                  placeholder="Masukkan jenis bahan"
-                                                 value="{{ old('jenis bahan') }}"
+                                                 value="{{ old('jenisbahan') }}"
                                         />
                                     </div>
 

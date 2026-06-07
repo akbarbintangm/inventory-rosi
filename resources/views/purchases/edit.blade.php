@@ -70,8 +70,8 @@
                                 <tr>
                                     <th scope="col" class="align-middle text-center">No.</th>
                                     <th scope="col" class="align-middle text-center">Photo</th>
-                                    <th scope="col" class="align-middle text-center">Product Name</th>
-                                    <th scope="col" class="align-middle text-center">Product Code</th>
+                                    <th scope="col" class="align-middle text-center">Bahan Name</th>
+                                    <th scope="col" class="align-middle text-center">Bahan Code</th>
                                     <th scope="col" class="align-middle text-center">Current Stock</th>
                                     <th scope="col" class="align-middle text-center">Quantity</th>
                                     <th scope="col" class="align-middle text-center">Price</th>
@@ -85,20 +85,20 @@
                                         <td class="align-middle justify-content-center text-center">
                                             <div style="max-height: 80px; max-width: 80px;">
                                                 <img class="img-fluid"
-                                                    src="{{ $item->product->product_image ? asset('storage/' . $item->product->product_image) : asset('assets/img/products/default.webp') }}">
+                                                    src="{{ $item->item_image ? asset('storage/' . $item->item_image) : asset('assets/img/bahan/default.webp') }}">
                                             </div>
                                         </td>
                                         <td class="align-middle text-center">
-                                            {{ $item->product->name }}
+                                            {{ $item->item_name }}
                                         </td>
                                         <td class="align-middle text-center">
                                             <span class="badge bg-indigo-lt">
-                                                {{ $item->product->code }}
+                                                {{ $item->item_code }}
                                             </span>
                                         </td>
                                         <td class="align-middle text-center">
                                             <span class="badge bg-primary-lt">
-                                                {{ $item->product->quantity }}
+                                                {{ $item->item_stock }}
                                             </span>
                                         </td>
                                         <td class="align-middle text-center">

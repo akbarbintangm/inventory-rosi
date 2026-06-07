@@ -11,6 +11,7 @@ use App\Models\Category;
 use App\Models\Unit;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Picqer\Barcode\BarcodeGeneratorHTML;
+use Illuminate\Support\Facades\Storage;
 
 
 class BahanBakuController extends Controller
@@ -87,16 +88,17 @@ class BahanBakuController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(BahanBaku $bahanBaku)
+    public function show(BahanBaku $bahanbaku)
     {
-        $bahan = BahanBaku::where("kodebahan", $kodebahan)->firstOrFail();
+        abort_unless($bahanbaku->user_id === auth()->id(), 404);
+
         // Generate a barcode
         $generator = new BarcodeGeneratorHTML();
 
-        $barcode = $generator->getBarcode($bahan->kodebahan, $generator::TYPE_CODE_128);
+        $barcode = $generator->getBarcode($bahanbaku->kodebahan, $generator::TYPE_CODE_128);
 
         return view('bahanbakus.show', [
-            'bahan' => $bahan,
+            'bahan' => $bahanbaku,
             'barcode' => $barcode,
         ]);
     }
@@ -104,24 +106,65 @@ class BahanBakuController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(BahanBaku $bahanBaku)
+    public function edit(BahanBaku $bahanbaku)
     {
-        //
+        abort_unless($bahanbaku->user_id === auth()->id(), 404);
+
+        return view('bahanbakus.edit', [
+            'bahan' => $bahanbaku,
+            'categories' => Category::where("user_id", auth()->id())->get(),
+            'units' => Unit::where("user_id", auth()->id())->get(),
+        ]);
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, BahanBaku $bahanBaku)
+    public function update(updatebahanbakurequest $request, BahanBaku $bahanbaku)
     {
-        //
+        abort_unless($bahanbaku->user_id === auth()->id(), 404);
+
+        $image = $bahanbaku->fotobahan;
+        if ($request->hasFile('fotobahan')) {
+            if ($bahanbaku->fotobahan) {
+                Storage::disk('public')->delete($bahanbaku->fotobahan);
+            }
+
+            $image = $request->file('fotobahan')->store('bahanbakus', 'public');
+        }
+
+        $bahanbaku->update([
+            'fotobahan' => $image,
+            'namabahan' => $request->namabahan,
+            'category_id' => $request->category_id,
+            'unit_id' => $request->unit_id,
+            'stokbahan' => $request->stokbahan,
+            'hargabeli' => $request->hargabeli,
+            'detailbahan' => $request->detailbahan,
+            'tanggalmasuk' => $request->tanggalmasuk,
+            'jenisbahan' => $request->jenisbahan,
+        ]);
+
+        return redirect()
+            ->route('bahanbakus.index')
+            ->with('success', 'Bahan baku has been updated!');
     }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(BahanBaku $bahanBaku)
+    public function destroy(BahanBaku $bahanbaku)
     {
-        //
+        abort_unless($bahanbaku->user_id === auth()->id(), 404);
+
+        if ($bahanbaku->fotobahan) {
+            Storage::disk('public')->delete($bahanbaku->fotobahan);
+        }
+
+        $bahanbaku->delete();
+
+        return redirect()
+            ->route('bahanbakus.index')
+            ->with('success', 'Bahan baku has been deleted!');
     }
 }

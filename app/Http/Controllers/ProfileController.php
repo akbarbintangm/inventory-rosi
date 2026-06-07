@@ -27,7 +27,7 @@ class ProfileController extends Controller
             'name' => 'required|max:50',
             'photo' => 'image|file|max:1024',
             'email' => 'required|email|max:50|unique:users,email,' . $user->id,
-            'username' => 'required|min:4|max:25|alpha_dash:ascii|unique:users,username,' . $user->id
+            'username' => 'required|min:4|max:50|unique:users,username,' . $user->id
         ];
 
         $validatedData = $request->validate($rules);

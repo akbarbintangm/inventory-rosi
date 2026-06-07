@@ -119,6 +119,10 @@
                                 {{ __('Back to previous') }}
                             </a>
 
+                            <a href="javascript:window.print()" class="btn btn-success">
+                                {{ __('Print Invoice') }}
+                            </a>
+
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#modal">
                                 {{ __('Pay Now') }}
                             </button>
@@ -206,6 +210,6 @@
             </div>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
+        <script src="{{ asset('dist/js/tabler.min.js') }}"></script>
     </body>
 </html>

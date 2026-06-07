@@ -11,9 +11,13 @@ class PosController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::with(['category', 'unit'])->get();
+        $products = Product::where('user_id', auth()->id())
+            ->with(['category', 'unit'])
+            ->get();
 
-        $customers = Customer::all()->sortBy('name');
+        $customers = Customer::where('user_id', auth()->id())
+            ->get()
+            ->sortBy('name');
 
         $carts = Cart::content();
 
@@ -55,11 +59,15 @@ class PosController extends Controller
     {
         $rules = [
             'qty' => 'required|numeric',
-            'product_id' => 'numeric'
+            'product_id' => 'nullable|numeric'
         ];
         
         $validatedData = $request->validate($rules);
-        if ($validatedData['qty'] > Product::where('id', intval($validatedData['product_id']))->value('quantity')) {
+
+        if (
+            isset($validatedData['product_id'])
+            && $validatedData['qty'] > Product::where('id', intval($validatedData['product_id']))->value('quantity')
+        ) {
             return redirect()
             ->back()
             ->with('error', 'The requested quantity is not available in stock.');

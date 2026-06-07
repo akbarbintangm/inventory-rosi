@@ -37,10 +37,10 @@ class BahanBaku extends Model
         'tanggalmasuk' => 'datetime'
     ];
 
-    /*public function getRouteKeyName(): string
+    public function getRouteKeyName(): string
     {
-        return 'slug';
-    }*/
+        return 'kodebahan';
+    }
 
     public function category(): BelongsTo
     {

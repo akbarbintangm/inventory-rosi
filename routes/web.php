@@ -4,6 +4,7 @@ use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\Dashboards\DashboardController;
 use App\Http\Controllers\InvoiceController;
+use App\Http\Controllers\NotaTerimaController;
 use App\Http\Controllers\Order\DueOrderController;
 use App\Http\Controllers\Order\OrderCompleteController;
 use App\Http\Controllers\Order\OrderController;
@@ -15,6 +16,7 @@ use App\Http\Controllers\Product\ProductImportController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Purchase\PurchaseController;
 use App\Http\Controllers\Quotation\QuotationController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SupplierController;
 use App\Http\Controllers\UnitController;
 use App\Http\Controllers\UserController;
@@ -73,6 +75,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // bahan baku
     //Route::get(url: '/bahanbaku'. action \App\Livewire\bahanbaku\showbahan::class)->name(name: 'bahanbaku.showbahan');
     Route::resource('/bahanbakus', BahanBakuController::class,);
+
+    // Route Nota Terima
+    Route::get('/notaterima', [NotaTerimaController::class, 'index'])->name('notaterima.index');
+    Route::post('/notaterima/print', [NotaTerimaController::class, 'printNota'])->name('notaterima.print');
+
+    // Route Laporan
+    Route::get('/laporan', [ReportController::class, 'index'])->name('reports.index');
+    Route::post('/laporan/print', [ReportController::class, 'printReport'])->name('reports.print');
+    Route::post('/laporan/export', [ReportController::class, 'export'])->name('reports.export');
 
     
     // Route POS

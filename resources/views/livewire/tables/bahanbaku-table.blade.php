@@ -97,7 +97,7 @@
                 </tr>
             </thead>
             <tbody>
-                @forelse ($bahan as $bahan)
+                @forelse ($bahan_bakus as $bahan)
                     <tr>
                         <td class="align-middle text-center">
                             {{ $loop->iteration }}
@@ -114,7 +114,7 @@
                             {{ $bahan->kodebahan }}
                         </td>
                         <td class="align-middle text-center">
-                            {{ $bahan->category ? $bahan->category->namabahan : '--' }}
+                            {{ $bahan->category ? $bahan->category->name : '--' }}
                         </td>
                         <td class="align-middle text-center">
                             {{ $bahan->stokbahan }}
@@ -139,12 +139,12 @@
 
     <div class="card-footer d-flex align-items-center">
         <p class="m-0 text-secondary">
-            Showing <span>{{ $bahanbakus->firstItem() }}</span>
-            to <span>{{ $bahanbakus->lastItem() }}</span> of <span>{{ $bahanbakus->total() }}</span> entries
+            Showing <span>{{ $bahan_bakus->firstItem() }}</span>
+            to <span>{{ $bahan_bakus->lastItem() }}</span> of <span>{{ $bahan_bakus->total() }}</span> entries
         </p>
 
         <ul class="pagination m-0 ms-auto">
-            {{ $bahanbakus->links() }}
+            {{ $bahan_bakus->links() }}
         </ul>
     </div>
 </div>

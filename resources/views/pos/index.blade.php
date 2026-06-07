@@ -46,6 +46,7 @@
                                             @csrf
                                             <div class="input-group">
                                                 <input type="number" class="form-control" name="qty" required value="{{ old('qty', $item->qty) }}">
+                                                <input type="hidden" name="product_id" value="{{ $item->id }}">
                                                 <div class="input-group-append">
                                                     <button type="submit" class="btn btn-success border-none" data-toggle="tooltip" data-placement="top" title="" data-original-title="Sumbit"><i class="fas fa-check"></i></button>
                                                 </div>
@@ -195,7 +196,7 @@
                                                 @csrf
                                                 <input type="hidden" name="id" value="{{ $product->id }}">
                                                 <input type="hidden" name="name" value="{{ $product->name }}">
-                                                <input type="hidden" name="price" value="{{ $product->selling_price }}">
+                                                <input type="hidden" name="selling_price" value="{{ $product->selling_price }}">
 
                                                 <button type="submit" class="btn btn-outline-primary btn-sm">
                                                     <i class="fa-solid fa-plus"></i>

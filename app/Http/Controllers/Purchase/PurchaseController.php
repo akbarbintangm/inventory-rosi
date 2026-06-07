@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Purchase;
 use App\Enums\PurchaseStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Purchase\StorePurchaseRequest;
+use App\Models\BahanBaku;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Purchase;
@@ -107,7 +108,9 @@ class PurchaseController extends Controller
             foreach ($request->invoiceProducts as $product)
             {
                 $pDetails['purchase_id']    = $purchase['id'];
-                $pDetails['product_id']     = $product['product_id'];
+                $pDetails['product_id']     = $product['product_id'] ?? null;
+                $pDetails['bahan_baku_id']  = $product['bahan_baku_id'] ?? null;
+                $pDetails['item_type']      = $product['item_type'] ?? 'product';
                 $pDetails['quantity']       = $product['quantity'];
                 $pDetails['unitcost']       = intval($product['unitcost']);
                 $pDetails['total']          = $product['total'];
@@ -130,6 +133,13 @@ class PurchaseController extends Controller
 
         foreach ($products as $product)
         {
+            if ($product->bahan_baku_id) {
+                BahanBaku::where('id', $product->bahan_baku_id)
+                    ->update(['stokbahan' => DB::raw('stokbahan+'.$product->quantity)]);
+
+                continue;
+            }
+
             Product::where('id', $product->product_id)
                     ->update(['quantity' => DB::raw('quantity+'.$product->quantity)]);
         }
@@ -186,20 +196,31 @@ class PurchaseController extends Controller
         $eDate = $validatedData['end_date'];
 
         $purchases = DB::table('purchase_details')
-            ->join('products', 'purchase_details.product_id', '=', 'products.id')
+            ->leftJoin('products', 'purchase_details.product_id', '=', 'products.id')
+            ->leftJoin('bahan_bakus', 'purchase_details.bahan_baku_id', '=', 'bahan_bakus.id')
             ->join('purchases', 'purchase_details.purchase_id', '=', 'purchases.id')
             ->join('users', 'users.id', '=', 'purchases.created_by')
-            ->whereBetween('purchases.updated_at',[$sDate,$eDate])
+            ->whereBetween('purchases.date',[$sDate,$eDate])
             ->where('purchases.status','1')
-            ->select( 'purchases.purchase_no', 'purchases.updated_at', 'purchases.supplier_id','products.code', 'products.name', 'purchase_details.quantity', 'purchase_details.unitcost', 'purchase_details.total', 'users.name as created_by')
+            ->select(
+                'purchases.purchase_no',
+                'purchases.date',
+                'purchases.supplier_id',
+                DB::raw('COALESCE(products.code, bahan_bakus.kodebahan) as code'),
+                DB::raw('COALESCE(products.name, bahan_bakus.namabahan) as name'),
+                'purchase_details.quantity',
+                'purchase_details.unitcost',
+                'purchase_details.total',
+                'users.name as created_by'
+            )
             ->get();
 
         $purchase_array [] = array(
             'Date',
             'No Purchase',
             'Supplier',
-            'Product Code',
-            'Product',
+            'Kode Bahan/Barang',
+            'Nama Bahan/Barang',
             'Quantity',
             'Unitcost',
             'Total',
@@ -209,11 +230,11 @@ class PurchaseController extends Controller
         foreach($purchases as $purchase)
         {
             $purchase_array[] = array(
-                'Date' => $purchase->updated_at,
+                'Date' => $purchase->date,
                 'No Purchase' => $purchase->purchase_no,
                 'Supplier' => $purchase->supplier_id,
-                'Product Code' => $purchase->code,
-                'Product' => $purchase->name,
+                'Kode Bahan/Barang' => $purchase->code,
+                'Nama Bahan/Barang' => $purchase->name,
                 'Quantity' => $purchase->quantity,
                 'Unitcost' => $purchase->unitcost,
                 'Total' => $purchase->total,

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use App\Http\Requests\User\StoreUserRequest;
 use App\Http\Requests\User\UpdateUserRequest;
+use Illuminate\Support\Str;
 
 class UserController extends Controller
 {
@@ -27,7 +28,13 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request)
     {
-        $user = User::create($request->all());
+        $data = $request->validated();
+        $data['uuid'] = Str::uuid();
+        $data['password'] = Hash::make($data['password']);
+        $data['email_verified_at'] = now();
+        unset($data['password_confirmation']);
+
+        $user = User::create($data);
 
         /**
          * Handle upload an image
@@ -107,7 +114,11 @@ class UserController extends Controller
         ]);
 
         # Update the new Password
-        User::where('username', $username)->update([
+        $user = User::where('username', $username)
+            ->orWhere('name', $username)
+            ->firstOrFail();
+
+        $user->update([
             'password' => Hash::make($validated['password'])
         ]);
 

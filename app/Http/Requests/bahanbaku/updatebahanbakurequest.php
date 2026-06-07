@@ -29,9 +29,9 @@ class updatebahanbakurequest extends FormRequest
             'category_id'               => 'required|integer',
             'unit_id'                   => 'required|integer',
             'stokbahan'                 => 'required|integer',
-            'jenisbahan'                => 'required|integer',
+            'jenisbahan'                => 'required|string',
             'detailbahan'               => 'nullable|max:1000',
-            'tanggalmasuk'              => 'required|integer',
+            'tanggalmasuk'              => 'required|date',
             'hargabeli'                 => 'required|numeric',
             'stokperingatan'            => 'nullable|integer',
         ];

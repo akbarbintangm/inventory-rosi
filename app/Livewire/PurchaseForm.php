@@ -2,7 +2,7 @@
 
 namespace App\Livewire;
 
-use App\Models\Product;
+use App\Models\BahanBaku;
 use Livewire\Component;
 use Livewire\Attributes\Validate;
 use Illuminate\Support\Collection;
@@ -15,12 +15,12 @@ class PurchaseForm extends Component
 
     public array $invoiceProducts = [];
 
-    #[Validate('required', message: 'Please select products')]
+    #[Validate('required', message: 'Please select bahan')]
     public Collection $allProducts;
 
     public function mount(): void
     {
-        $this->allProducts = Product::where("user_id",auth()->id())->get();
+        $this->allProducts = BahanBaku::where("user_id",auth()->id())->get();
     }
 
     public function render(): View
@@ -81,8 +81,8 @@ class PurchaseForm extends Component
 
         $product = $this->allProducts->find($this->invoiceProducts[$index]['product_id']);
 
-        $this->invoiceProducts[$index]['product_name'] = $product->name;
-        $this->invoiceProducts[$index]['product_price'] = $product->buying_price;
+        $this->invoiceProducts[$index]['product_name'] = $product->namabahan;
+        $this->invoiceProducts[$index]['product_price'] = $product->hargabeli;
         $this->invoiceProducts[$index]['is_saved'] = true;
     }
 

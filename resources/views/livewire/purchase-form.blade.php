@@ -2,7 +2,7 @@
     <table class="table table-bordered" id="products_table">
         <thead class="thead-dark">
             <tr>
-                <th class="align-middle">Product</th>
+                <th class="align-middle">Bahan</th>
                 <th class="align-middle text-center">Quantity</th>
                 <th class="align-middle text-center">Price</th>
                 <th class="align-middle text-center">Total</th>
@@ -15,7 +15,8 @@
             <tr>
                 <td class="align-middle">
                     @if($invoiceProduct['is_saved'])
-                        <input type="hidden" name="invoiceProducts[{{$index}}][product_id]" value="{{ $invoiceProduct['product_id'] }}">
+                        <input type="hidden" name="invoiceProducts[{{$index}}][bahan_baku_id]" value="{{ $invoiceProduct['product_id'] }}">
+                        <input type="hidden" name="invoiceProducts[{{$index}}][item_type]" value="bahan">
 
                         {{ $invoiceProduct['product_name'] }}
 
@@ -26,11 +27,11 @@
                                 class="form-control text-center @error('invoiceProducts.' . $index . '.product_id') is-invalid @enderror"
                         >
 
-                            <option value="" class="text-center">-- choose product --</option>
+                            <option value="" class="text-center">-- choose bahan --</option>
 
                             @foreach ($allProducts as $product)
                                 <option value="{{ $product->id }}" class="text-center">
-                                    {{ $product->name }}
+                                    {{ $product->namabahan }}
 {{--                                    (${{ number_format($product->buying_price, 2) }})--}}
                                 </option>
                             @endforeach
@@ -64,11 +65,11 @@
                 {{--- Unit Price ---}}
                 <td class="align-middle text-center">
                     @if($invoiceProduct['is_saved'])
-                        {{ $unit_cost = number_format($invoiceProduct['product_price'], 2) }}
+                        {{ number_format($invoiceProduct['product_price'], 2) }}
 
                         <input type="hidden"
                                name="invoiceProducts[{{$index}}][unitcost]"
-                               value="{{ $unit_cost }}"
+                               value="{{ $invoiceProduct['product_price'] }}"
                         >
                     @endif
                 </td>

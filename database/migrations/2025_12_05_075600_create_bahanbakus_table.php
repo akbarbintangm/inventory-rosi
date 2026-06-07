@@ -11,9 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasTable('bahanbakus')) {
+            return;
+        }
+
         Schema::create('bahanbakus', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('kodebahan')->constrained()->onDelete('cascade');
+            $table->string('kodebahan');
             $table->string('namabahan');
             $table->decimal('stokbahan');
             $table->string('kategoribahan');
