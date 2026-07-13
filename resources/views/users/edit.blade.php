@@ -62,7 +62,30 @@
                                         <div class="col-md-12">
                                             <x-input name="name" :value="old('name', $user->name)" required="true"/>
 
-                                            <x-input name="email" :value="old('name', $user->email)" label="Email address" required="true"/>
+                                            <x-input name="email" :value="old('email', $user->email)" label="Email address" required="true"/>
+
+                                            <div class="mb-3">
+                                                <label for="level" class="form-label">
+                                                    {{ __('Level User') }}
+                                                    <span class="text-danger">*</span>
+                                                </label>
+
+                                                <select name="level" id="level"
+                                                        class="form-select @error('level') is-invalid @enderror"
+                                                >
+                                                    @foreach(\App\Models\User::LEVELS as $level => $label)
+                                                        <option value="{{ $level }}" @selected(old('level', $user->level) === $level)>
+                                                            {{ $label }}
+                                                        </option>
+                                                    @endforeach
+                                                </select>
+
+                                                @error('level')
+                                                <div class="invalid-feedback">
+                                                    {{ $message }}
+                                                </div>
+                                                @enderror
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\User;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -25,6 +26,7 @@ class UpdateUserRequest extends FormRequest
         return [
             'name' => 'required|max:50',
             'photo' => 'image|file|max:1024',
+            'level' => ['required', Rule::in(array_keys(User::LEVELS))],
             'email' => [
                 'required',
                 'email',

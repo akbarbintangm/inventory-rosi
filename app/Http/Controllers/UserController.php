@@ -75,7 +75,7 @@ class UserController extends Controller
 //            $validatedData['email_verified_at'] = null;
 //        }
 
-        $user->update($request->except('photo'));
+        $user->update($request->safe()->except('photo'));
 
         /**
          * Handle upload image with Storage.

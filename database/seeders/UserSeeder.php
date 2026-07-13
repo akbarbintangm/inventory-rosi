@@ -17,7 +17,9 @@ class UserSeeder extends Seeder
         $users = collect([
             [
                 'name' => 'Admin',
+                'username' => 'admin',
                 'email' => 'admin@admin.com',
+                'level' => 'owner',
                 'email_verified_at' => now(),
                 'password' => bcrypt('password'),
                 'created_at' => now(),
@@ -25,8 +27,10 @@ class UserSeeder extends Seeder
                 'photo' => 'admin.jpg'
             ],
             [
-                'name' => 'quest',
+                'name' => 'Manager PIC',
+                'username' => 'manager_pic',
                 'email' => 'quest@quest.com',
+                'level' => 'manager_pic',
                 'email_verified_at' => now(),
                 'password' => bcrypt('password'),
                 'created_at' => now(),
@@ -34,8 +38,10 @@ class UserSeeder extends Seeder
                 'photo' => 'admin.jpg'
             ],
             [
-                'name' => 'user',
+                'name' => 'User Admin',
+                'username' => 'user_admin',
                 'email' => 'user@user.com',
+                'level' => 'admin',
                 'email_verified_at' => now(),
                 'password' => bcrypt('password'),
                 'created_at' => now(),
@@ -45,7 +51,10 @@ class UserSeeder extends Seeder
         ]);
 
         $users->each(function ($user) {
-            User::insert($user);
+            User::updateOrCreate(
+                ['email' => $user['email']],
+                $user
+            );
         });
     }
 }

@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\User;
 
+use App\Models\User;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreUserRequest extends FormRequest
 {
@@ -25,6 +27,7 @@ class StoreUserRequest extends FormRequest
             'photo' => 'image|file|max:1024',
             'name' => 'required|max:50',
             'email' => 'required|email|max:50|unique:users,email',
+            'level' => ['required', Rule::in(array_keys(User::LEVELS))],
             //'username' => 'required|min:4|max:25|alpha_dash:ascii|unique:users,username',
             'password' => 'required_with:password_confirmation|min:6',
             'password_confirmation' => 'same:password|min:6',

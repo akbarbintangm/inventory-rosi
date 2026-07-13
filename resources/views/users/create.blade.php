@@ -107,6 +107,29 @@
                                             @enderror
                                         </div>
 
+                                        <div class="mb-3">
+                                            <label for="level" class="form-label">
+                                                {{ __('Level User') }}
+                                                <span class="text-danger">*</span>
+                                            </label>
+
+                                            <select name="level" id="level"
+                                                    class="form-select @error('level') is-invalid @enderror"
+                                            >
+                                                @foreach(\App\Models\User::LEVELS as $level => $label)
+                                                    <option value="{{ $level }}" @selected(old('level', 'admin') === $level)>
+                                                        {{ $label }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+
+                                            @error('level')
+                                            <div class="invalid-feedback">
+                                                {{ $message }}
+                                            </div>
+                                            @enderror
+                                        </div>
+
                                         {{---
                                         <div class="mb-3">
                                             <label for="username" class="form-label">

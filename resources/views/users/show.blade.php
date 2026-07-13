@@ -55,6 +55,10 @@
                                             <td>{{ $user->email }}</td>
                                         </tr>
                                         <tr>
+                                            <td>Level User</td>
+                                            <td>{{ $user->level_label }}</td>
+                                        </tr>
+                                        <tr>
                                             <td>Email verification</td>
                                             <td>{{ $user->email_verified_at }}</td>
                                         </tr>

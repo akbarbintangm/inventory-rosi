@@ -12,12 +12,19 @@ class User extends Authenticatable implements MustVerifyEmail
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    public const LEVELS = [
+        'owner' => 'Owner',
+        'manager_pic' => 'Manager/PIC',
+        'admin' => 'Admin',
+    ];
+
     protected $fillable = [
         'uuid',
         'photo',
         'name',
         'username',
         'email',
+        'level',
         'email_verified_at',
         'password',
         "store_name",
@@ -40,11 +47,17 @@ class User extends Authenticatable implements MustVerifyEmail
     public function scopeSearch($query, $value): void
     {
         $query->where('name', 'like', "%{$value}%")
-            ->orWhere('email', 'like', "%{$value}%");
+            ->orWhere('email', 'like', "%{$value}%")
+            ->orWhere('level', 'like', "%{$value}%");
     }
 
     public function getRouteKeyName(): string
     {
         return 'name';
+    }
+
+    public function getLevelLabelAttribute(): string
+    {
+        return self::LEVELS[$this->level] ?? $this->level ?? '-';
     }
 }
