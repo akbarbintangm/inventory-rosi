@@ -51,10 +51,12 @@ class UserSeeder extends Seeder
         ]);
 
         $users->each(function ($user) {
-            User::updateOrCreate(
+            $model = User::updateOrCreate(
                 ['email' => $user['email']],
                 $user
             );
+
+            $model->syncRoles($user['level']);
         });
     }
 }

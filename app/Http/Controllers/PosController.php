@@ -11,11 +11,11 @@ class PosController extends Controller
 {
     public function index(Request $request)
     {
-        $products = Product::where('user_id', auth()->id())
+        $products = Product::query()
             ->with(['category', 'unit'])
             ->get();
 
-        $customers = Customer::where('user_id', auth()->id())
+        $customers = Customer::query()
             ->get()
             ->sortBy('name');
 

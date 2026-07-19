@@ -11,6 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // SQLite already gets this column as a string from the create migration and
+        // cannot run change() without Doctrine DBAL.
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('bahan_bakus', function (Blueprint $table) {
             //ganti tipe data kodebahan int ke string
             $table->string('kodebahan')->change();
@@ -22,9 +28,12 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         Schema::table('bahan_bakus', function (Blueprint $table) {
-            //
-            $table->int('kodebahan')->change();
+            $table->integer('kodebahan')->change();
         });
     }
 };

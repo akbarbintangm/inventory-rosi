@@ -26,7 +26,7 @@ class StockAlert extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Stock Alert',
+            subject: 'Peringatan Stok Produk Menipis',
         );
     }
 

@@ -17,7 +17,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::where("user_id", auth()->id())->count();
+        $products = Product::count();
 
         return view('products.index', [
             'products' => $products,
@@ -26,15 +26,15 @@ class ProductController extends Controller
 
     public function create(Request $request)
     {
-        $categories = Category::where("user_id", auth()->id())->get(['id', 'name']);
-        $units = Unit::where("user_id", auth()->id())->get(['id', 'name']);
+        $categories = Category::get(['id', 'name']);
+        $units = Unit::get(['id', 'name']);
 
         if ($request->has('category')) {
-            $categories = Category::where("user_id", auth()->id())->whereSlug($request->get('category'))->get();
+            $categories = Category::whereSlug($request->get('category'))->get();
         }
 
         if ($request->has('unit')) {
-            $units = Unit::where("user_id", auth()->id())->whereSlug($request->get('unit'))->get();
+            $units = Unit::whereSlug($request->get('unit'))->get();
         }
 
         return view('products.create', [
@@ -53,7 +53,9 @@ class ProductController extends Controller
             $image = $request->file('product_image')->store('products', 'public');
         }
 
-        Product::create([
+        $initialQuantity = (int) $request->quantity;
+
+        $product = Product::create([
             "code" => IdGenerator::generate([
                 'table' => 'products',
                 'field' => 'code',
@@ -65,7 +67,7 @@ class ProductController extends Controller
             'name'              => $request->name,
             'category_id'       => $request->category_id,
             'unit_id'           => $request->unit_id,
-            'quantity'          => $request->quantity,
+            'quantity'          => 0,
             'buying_price'      => $request->buying_price,
             'selling_price'     => $request->selling_price,
             'quantity_alert'    => $request->quantity_alert,
@@ -76,6 +78,13 @@ class ProductController extends Controller
             "slug" => Str::slug($request->name, '-'),
             "uuid" => Str::uuid()
         ]);
+
+        $product->adjustStock(
+            $initialQuantity,
+            'opening_balance',
+            userId: auth()->id(),
+            note: 'Stok awal saat produk dibuat.',
+        );
 
 
         return to_route('products.index')->with('Berhasil..!', 'Produk telah ditambahkan');
@@ -99,8 +108,8 @@ class ProductController extends Controller
     {
         $product = Product::where("uuid", $uuid)->firstOrFail();
         return view('products.edit', [
-            'categories' => Category::where("user_id", auth()->id())->get(),
-            'units' => Unit::where("user_id", auth()->id())->get(),
+            'categories' => Category::all(),
+            'units' => Unit::all(),
             'product' => $product
         ]);
     }
@@ -108,7 +117,7 @@ class ProductController extends Controller
     public function update(UpdateProductRequest $request, $uuid)
     {
         $product = Product::where("uuid", $uuid)->firstOrFail();
-        $product->update($request->except('product_image'));
+        $quantityChange = (int) $request->quantity - (int) $product->quantity;
 
         $image = $product->product_image;
         if ($request->hasFile('product_image')) {
@@ -124,7 +133,6 @@ class ProductController extends Controller
         $product->slug = Str::slug($request->name, '-');
         $product->category_id = $request->category_id;
         $product->unit_id = $request->unit_id;
-        $product->quantity = $request->quantity;
         $product->buying_price = $request->buying_price;
         $product->selling_price = $request->selling_price;
         $product->quantity_alert = $request->quantity_alert;
@@ -133,6 +141,13 @@ class ProductController extends Controller
         $product->notes = $request->notes;
         $product->product_image = $image;
         $product->save();
+
+        $product->adjustStock(
+            $quantityChange,
+            'manual_adjustment',
+            userId: auth()->id(),
+            note: 'Penyesuaian stok dari formulir edit produk.',
+        );
 
 
         return redirect()

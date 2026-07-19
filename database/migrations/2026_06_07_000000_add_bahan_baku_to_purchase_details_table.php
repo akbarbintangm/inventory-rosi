@@ -23,6 +23,10 @@ return new class extends Migration
                 ->after('bahan_baku_id');
         });
 
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            return;
+        }
+
         DB::statement('ALTER TABLE purchase_details DROP FOREIGN KEY purchase_details_product_id_foreign');
         DB::statement('ALTER TABLE purchase_details MODIFY product_id BIGINT UNSIGNED NULL');
 
@@ -36,6 +40,14 @@ return new class extends Migration
 
     public function down(): void
     {
+        if (Schema::getConnection()->getDriverName() === 'sqlite') {
+            Schema::table('purchase_details', function (Blueprint $table) {
+                $table->dropColumn(['bahan_baku_id', 'item_type']);
+            });
+
+            return;
+        }
+
         Schema::table('purchase_details', function (Blueprint $table) {
             $table->dropForeign(['product_id']);
             $table->dropForeign(['bahan_baku_id']);

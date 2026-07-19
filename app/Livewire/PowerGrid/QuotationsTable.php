@@ -125,12 +125,6 @@ final class QuotationsTable extends PowerGridComponent
                 ->route('quotations.show', ['quotation' => $row])
                 ->method('get'),
 
-            Button::make('edit', file_get_contents('assets/svg/edit.svg'))
-                ->class('btn btn-outline-warning btn-icon w-100')
-                ->route('quotations.edit', ['quotation' => $row])
-                ->method('get')
-                ->tooltip('Edit Quotation'),
-
             Button::add('delete')
                 ->slot(file_get_contents('assets/svg/trash.svg'))
                 ->class('btn btn-outline-danger btn-icon w-100')

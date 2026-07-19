@@ -7,9 +7,11 @@
         </div>
 
 
+        @can('raw_material.create')
         <div class="card-actions">
             <x-action.create route="{{ route('bahanbakus.create') }}" />
         </div>
+        @endcan
 
        <div class="card-actions btn-group">
             <div class="dropdown">
@@ -121,9 +123,13 @@
                         </td>
                         <td class="align-middle text-center" style="width: 10%">
                             <x-button.show class="btn-icon" route="{{ route('bahanbakus.show', $bahan->kodebahan) }}" />
+                            @can('raw_material.edit')
                             <x-button.edit class="btn-icon" route="{{ route('bahanbakus.edit', $bahan->kodebahan) }}" />
+                            @endcan
+                            @can('raw_material.delete')
                             <x-button.delete class="btn-icon" route="{{ route('bahanbakus.destroy', $bahan->kodebahan) }}"
                                 onclick="return confirm('Are you sure to delete product {{ $bahan->namabahan }} ?')" />
+                            @endcan
                         </td>
                     </tr>
                 @empty

@@ -191,6 +191,7 @@
                             </li>
 
 
+                            @can('product.view')
                             <li class="nav-item {{ request()->is('products*') ? 'active' : null }}">
                                 <a class="nav-link" href="{{ route('products.index') }}">
                                     <span
@@ -217,7 +218,9 @@
                                     </span>
                                 </a>
                             </li>
+                            @endcan
 
+                            @can('raw_material.view')
                             <li class="nav-item dropdown {{ request()->is('bahanbakus*') ? 'active' : null }}">
                                 <a class="nav-link dropdown-toggle" href="{{ route('bahanbakus.index') }}" 
                                     data-bs-auto-close="outside" role="button" aria-expanded="false">
@@ -234,7 +237,9 @@
                                     </span>
                                 </a>
                             </li>
+                            @endcan
 
+                            @can('order.view')
                             <li class="nav-item dropdown {{ request()->is('orders*') ? 'active' : null }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" role="button" aria-expanded="false">
@@ -267,7 +272,9 @@
                                     </div>
                                 </div>
                             </li>
+                            @endcan
 
+                            @can('nota_receipt.view')
                             <li class="nav-item {{ request()->is('notaterima*') ? 'active' : null }}">
                                 <a class="nav-link" href="{{ route('notaterima.index') }}">
                                     <span
@@ -294,7 +301,9 @@
                                     </span>
                                 </a>
                             </li>
+                            @endcan
 
+                            @can('report.view')
                             <li class="nav-item {{ request()->is('laporan*') ? 'active' : null }}">
                                 <a class="nav-link" href="{{ route('reports.index') }}">
                                     <span
@@ -311,7 +320,9 @@
                                     </span>
                                 </a>
                             </li>
+                            @endcan
 
+                            @can('purchase.view')
                             <li class="nav-item dropdown {{ request()->is('purchases*') ? 'active' : null }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" role="button" aria-expanded="false">
@@ -352,8 +363,10 @@
                                     </div>
                                 </div>
                             </li>
+                            @endcan
 
 
+                         @canany(['supplier.view', 'customer.view'])
                          <li class="nav-item dropdown {{ request()->is('suppliers*', 'customers*') ? 'active' : null }}">
                                 <a class="nav-link dropdown-toggle" href="#navbar-base" data-bs-toggle="dropdown"
                                     data-bs-auto-close="outside" role="button" aria-expanded="false">
@@ -371,16 +384,21 @@
                                 <div class="dropdown-menu">
                                     <div class="dropdown-menu-columns">
                                         <div class="dropdown-menu-column">
+                                            @can('supplier.view')
                                             <a class="dropdown-item" href="{{ route('suppliers.index') }}">
                                                 {{ __('Suppliers') }}
                                             </a>
+                                            @endcan
+                                            @can('customer.view')
                                             <a class="dropdown-item" href="{{ route('customers.index') }}">
                                                 {{ __('Customers') }}
                                             </a>
+                                            @endcan
                                         </div>
                                     </div>
                                 </div>
                             </li>
+                            @endcanany
 
 
                             <li
@@ -415,9 +433,11 @@
                                             <a class="dropdown-item" href="{{ route('units.index') }}">
                                                 {{ __('Satuan') }}
                                             </a>
+                                            @can('user.manage')
                                             <a class="dropdown-item" href="{{ route('users.index') }}">
                                                 {{ __('User') }}
                                             </a>
+                                            @endcan
                                         </div>
                                     </div>
                                 </div>

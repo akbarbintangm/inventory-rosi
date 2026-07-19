@@ -9,22 +9,20 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderDetails;
 use App\Models\Product;
-use App\Models\User;
-use App\Mail\StockAlert;
+use App\Services\LowStockNotifier;
 use Carbon\Carbon;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use Haruncpi\LaravelIdGenerator\IdGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Mail;
 use Str;
 
 class OrderController extends Controller
 {
     public function index()
     {
-        $orders = Order::where('user_id', auth()->id())->count();
+        $orders = Order::count();
 
         return view('orders.index', [
             'orders' => $orders
@@ -33,9 +31,9 @@ class OrderController extends Controller
 
     public function create()
     {
-        $products = Product::where('user_id', auth()->id())->with(['category', 'unit'])->get();
+        $products = Product::with(['category', 'unit'])->get();
 
-        $customers = Customer::where('user_id', auth()->id())->get(['id', 'name']);
+        $customers = Customer::get(['id', 'name']);
 
         $carts = Cart::content();
 
@@ -101,37 +99,52 @@ class OrderController extends Controller
         ]);
     }
 
-    public function update($uuid, Request $request)
+    public function update($uuid, Request $request, LowStockNotifier $notifier)
     {
-        $order = Order::where('uuid', $uuid)->firstOrFail();
-        // TODO refactoring
+        $lowStockIds = DB::transaction(function () use ($uuid) {
+            $order = Order::query()
+                ->where('uuid', $uuid)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        // Reduce the stock
-        $products = OrderDetails::where('order_id', $order->id)->get();
-
-        $stockAlertProducts = [];
-
-        foreach ($products as $product) {
-            $productEntity = Product::where('id', $product->product_id)->first();
-            $newQty = $productEntity->quantity - $product->quantity;
-            if ($newQty < $productEntity->quantity_alert) {
-                $stockAlertProducts[] = $productEntity;
+            if ($order->order_status === OrderStatus::COMPLETE) {
+                return null;
             }
-            $productEntity->update(['quantity' => $newQty]);
+
+            $order->load('details.product');
+            $lowStockIds = [];
+
+            foreach ($order->details as $detail) {
+                $product = $detail->product;
+                $product->adjustStock(
+                    -((int) $detail->quantity),
+                    'order_completed',
+                    $order,
+                    auth()->id(),
+                    "Pesanan {$order->invoice_no}",
+                );
+
+                if ($product->quantity <= $product->quantity_alert) {
+                    $lowStockIds[] = $product->id;
+                }
+            }
+
+            $order->update([
+                'order_status' => OrderStatus::COMPLETE,
+                'due' => 0,
+                'pay' => $order->total,
+            ]);
+
+            return $lowStockIds;
+        });
+
+        if ($lowStockIds === null) {
+            return redirect()->back()->with('warning', 'Order was already completed.');
         }
 
-        if (count($stockAlertProducts) > 0) {
-            $listAdmin = [];
-            foreach (User::all('email') as $admin) {
-                $listAdmin [] = $admin->email;
-            }
-            Mail::to($listAdmin)->send(new StockAlert($stockAlertProducts));
+        if ($lowStockIds !== []) {
+            $notifier->send(Product::whereIn('id', $lowStockIds)->get());
         }
-        $order->update([
-            'order_status' => OrderStatus::COMPLETE,
-            'due' => '0',
-            'pay' => $order->total
-        ]);
 
         return redirect()
             ->route('orders.complete')
@@ -165,7 +178,7 @@ class OrderController extends Controller
         $order->update([
             'order_status' => 2
         ]);
-        $orders = Order::where('user_id',auth()->id())->count();
+        $orders = Order::count();
 
         return redirect()
             ->route('orders.index', [

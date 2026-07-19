@@ -11,7 +11,7 @@ class SupplierController extends Controller
 {
     public function index()
     {
-        $suppliers = Supplier::where("user_id", auth()->id())->count();
+        $suppliers = Supplier::count();
 
         return view('suppliers.index', [
             'suppliers' => $suppliers
@@ -52,7 +52,7 @@ class SupplierController extends Controller
 
     public function show($uuid)
     {
-        $supplier = Supplier::where("uuid", $uuid)->firstOrFail();
+        $supplier = Supplier::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
         $supplier->loadMissing('purchases')->get();
 
         return view('suppliers.show', [
@@ -62,7 +62,7 @@ class SupplierController extends Controller
 
     public function edit($uuid)
     {
-        $supplier = Supplier::where("uuid", $uuid)->firstOrFail();
+        $supplier = Supplier::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
         return view('suppliers.edit', [
             'supplier' => $supplier
         ]);
@@ -70,7 +70,7 @@ class SupplierController extends Controller
 
     public function update(UpdateSupplierRequest $request, $uuid)
     {
-        $supplier = Supplier::where("uuid", $uuid)->firstOrFail();
+        $supplier = Supplier::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
 
         /**
          * Handle upload image with Storage.
@@ -106,7 +106,7 @@ class SupplierController extends Controller
 
     public function destroy($uuid)
     {
-        $supplier = Supplier::where("uuid", $uuid)->firstOrFail();
+        $supplier = Supplier::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
         /**
          * Delete photo if exists.
          */

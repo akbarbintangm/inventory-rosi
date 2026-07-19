@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Supplier;
 use App\Models\Unit;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\Concerns\InteractsWithExceptionHandling;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -18,10 +19,17 @@ abstract class TestCase extends BaseTestCase
 
     public function createUser()
     {
-        return User::factory()->create([
+        $this->seed(RolePermissionSeeder::class);
+
+        $user = User::factory()->create([
            'name' => 'admin',
-           'email' => 'admin@admin.com'
+           'email' => 'admin@admin.com',
+           'level' => 'owner',
         ]);
+
+        $user->assignRole('owner');
+
+        return $user;
     }
 
     public function createProduct()
@@ -56,7 +64,7 @@ abstract class TestCase extends BaseTestCase
 
     public function createSupplier()
     {
-        return Supplier::create([
+        return Supplier::factory()->create([
             'name' => 'Thomann'
         ]);
     }

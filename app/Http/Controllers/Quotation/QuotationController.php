@@ -11,14 +11,15 @@ use Illuminate\Support\Facades\DB;
 use App\Http\Controllers\Controller;
 use Gloudemans\Shoppingcart\Facades\Cart;
 use App\Http\Requests\Quotation\StoreQuotationRequest;
-use Illuminate\Support\Facades\Request;
+use App\Services\LowStockNotifier;
+use Illuminate\Http\Request;
 use Str;
 
 class QuotationController extends Controller
 {
     public function index()
     {
-        $quotations = Quotation::where("user_id",auth()->id())->count();
+        $quotations = Quotation::count();
 
         return view('quotations.index', [
             'quotations' => $quotations
@@ -31,20 +32,20 @@ class QuotationController extends Controller
 
         return view('quotations.create', [
             'cart' => Cart::content('quotation'),
-            'products' => Product::where("user_id",auth()->id())->get(),
-            'customers' => Customer::where("user_id",auth()->id())->get(),
+            'products' => Product::all(),
+            'customers' => Customer::all(),
 
             // maybe?
             //'statuses' => QuotationStatus::cases()
         ]);
     }
 
-    public function store(StoreQuotationRequest $request)
+    public function store(StoreQuotationRequest $request, LowStockNotifier $notifier)
     {
         if (count(Cart::instance('quotation')->content()) === 0) {
             return redirect()->back()->with('message', 'Please search & select products!');
         }
-        DB::transaction(function () use ($request) {
+        $lowStockIds = DB::transaction(function () use ($request) {
             $quotation = Quotation::create([
                 'date' => $request->date,
                 'reference' => $request->reference,
@@ -62,6 +63,8 @@ class QuotationController extends Controller
                 'discount_amount' => Cart::instance('quotation')->discount(), //* 100,
             ]);
 
+            $lowStockIds = [];
+
             foreach (Cart::instance('quotation')->content() as $cart_item) {
                 QuotationDetails::create([
                     'quotation_id' => $quotation->id,
@@ -77,13 +80,30 @@ class QuotationController extends Controller
                     'product_tax_amount' => $cart_item->options->product_tax, //* 100,
                 ]);
                 //status = sent, reduce product quantity
-                if ($request->status == 1) {
-                    Product::where('id', $cart_item->id)->update(['quantity' => DB::raw('quantity-' . $cart_item->qty)]);
+                if ((int) $request->status === QuotationStatus::SENT->value) {
+                    $product = Product::findOrFail($cart_item->id);
+                    $product->adjustStock(
+                        -((int) $cart_item->qty),
+                        'quotation_sent',
+                        $quotation,
+                        auth()->id(),
+                        "Quotation {$quotation->reference}",
+                    );
+
+                    if ($product->quantity <= $product->quantity_alert) {
+                        $lowStockIds[] = $product->id;
+                    }
                 }
             }
 
             Cart::instance('quotation')->destroy();
+
+            return $lowStockIds;
         });
+
+        if ($lowStockIds !== []) {
+            $notifier->send(Product::whereIn('id', $lowStockIds)->get());
+        }
 
         return redirect()
             ->route('quotations.index')
@@ -92,7 +112,7 @@ class QuotationController extends Controller
 
     public function show($uuid)
     {
-        $quotation = Quotation::where("user_id",auth()->id())->where('uuid', $uuid)->firstOrFail();
+        $quotation = Quotation::where('uuid', $uuid)->firstOrFail();
 
         return view('quotations.show', [
             'quotation' => $quotation,
@@ -102,10 +122,31 @@ class QuotationController extends Controller
 
     public function destroy(Quotation $quotation)
     {
-        $quotation->update([
-            "status" => 2
-        ]);
-        $quotations = Quotation::where("user_id",auth()->id())->count();
+        DB::transaction(function () use ($quotation) {
+            $quotation = Quotation::query()->lockForUpdate()->findOrFail($quotation->id);
+
+            if ($quotation->status === QuotationStatus::CANCELED) {
+                return;
+            }
+
+            if ($quotation->status === QuotationStatus::SENT) {
+                $quotation->load('quotationDetails.product');
+
+                foreach ($quotation->quotationDetails as $detail) {
+                    $detail->product?->adjustStock(
+                        (int) $detail->quantity,
+                        'quotation_cancelled',
+                        $quotation,
+                        auth()->id(),
+                        "Pembatalan quotation {$quotation->reference}",
+                    );
+                }
+            }
+
+            $quotation->update(['status' => QuotationStatus::CANCELED]);
+        });
+
+        $quotations = Quotation::count();
 
         return redirect()
             ->route('quotations.index', [
@@ -114,19 +155,48 @@ class QuotationController extends Controller
     }
 
     // complete quotaion method
-    public function update(Request $request,$uuid)
+    public function update(Request $request, $uuid, LowStockNotifier $notifier)
     {
-        $quotation = Quotation::where("user_id",auth()->id())->where('uuid', $uuid)->firstOrFail();
-        $quotation->with(['customer', 'quotationDetails'])->get();
-        $quotation->status = 1;
-        // Reduce the stock
-        $quoteProducts = $quotation->quotationDetails;
-        
-        foreach ($quoteProducts as $product) {
-            Product::where('id', $product->product_id)
-            ->update(['quantity' => DB::raw('quantity-' . $product->quantity)]);
+        $lowStockIds = DB::transaction(function () use ($uuid) {
+            $quotation = Quotation::query()
+                ->where('uuid', $uuid)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if ($quotation->status !== QuotationStatus::PENDING) {
+                return null;
+            }
+
+            $quotation->load('quotationDetails.product');
+            $lowStockIds = [];
+
+            foreach ($quotation->quotationDetails as $detail) {
+                $product = $detail->product;
+                $product->adjustStock(
+                    -((int) $detail->quantity),
+                    'quotation_sent',
+                    $quotation,
+                    auth()->id(),
+                    "Quotation {$quotation->reference}",
+                );
+
+                if ($product->quantity <= $product->quantity_alert) {
+                    $lowStockIds[] = $product->id;
+                }
+            }
+
+            $quotation->update(['status' => QuotationStatus::SENT]);
+
+            return $lowStockIds;
+        });
+
+        if ($lowStockIds === null) {
+            return redirect()->back()->with('warning', 'Quotation sudah diproses sebelumnya.');
         }
-        $quotation->save();
+
+        if ($lowStockIds !== []) {
+            $notifier->send(Product::whereIn('id', $lowStockIds)->get());
+        }
 
         return redirect()
             ->route('quotations.index')

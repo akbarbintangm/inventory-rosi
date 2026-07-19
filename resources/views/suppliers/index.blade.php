@@ -8,6 +8,7 @@
             message="Try adjusting your search or filter to find what you're looking for."
             button_label="{{ __('Add your first Supplier') }}"
             button_route="{{ route('suppliers.create') }}"
+            permission="supplier.create"
         />
     @else
         <div class="container-xl">

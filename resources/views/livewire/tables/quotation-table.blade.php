@@ -6,9 +6,11 @@
             </h3>
         </div>
 
+        @can('quotation.create')
         <div class="card-actions">
             <x-action.create route="{{ route('quotations.create') }}" />
         </div>
+        @endcan
     </div>
 
     <div class="card-body border-bottom py-3">
@@ -106,8 +108,12 @@
                         <x-button.show class="btn-icon" route="{{ route('quotations.show', $quotation->uuid) }}"/>
                         @if ($quotation->status === \App\Enums\QuotationStatus::PENDING)
                             {{-- <x-button.edit class="btn-icon" route="{{ route('quotations.edit', $quotation->uuid) }}"/> --}}
+                            @can('quotation.complete')
                             <x-button.complete class="btn-icon" route="{{ route('quotations.update', $quotation->uuid) }}" onclick="return confirm('Are you sure to complete quotation no. {{ $quotation->reference }}?')"/>
+                            @endcan
+                            @can('quotation.delete')
                             <x-button.delete class="btn-icon" route="{{ route('quotations.destroy', $quotation) }}" onclick="return confirm('Are you sure to cancel Quotation NO. {{ $quotation->reference }}?')"/>
+                            @endcan
                         @endif
                     </td>
                 </tr>
@@ -132,4 +138,3 @@
         </ul>
     </div>
 </div>
-

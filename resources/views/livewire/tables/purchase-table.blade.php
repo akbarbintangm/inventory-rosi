@@ -6,9 +6,11 @@
             </h3>
         </div>
 
+        @can('purchase.create')
         <div class="card-actions">
             <x-action.create route="{{ route('purchases.create') }}" />
         </div>
+        @endcan
     </div>
 
     <div class="card-body border-bottom py-3">
@@ -104,7 +106,7 @@
                             </span>
                         </td>
                         <td class="align-middle text-center">
-                            <x-button.show class="btn-icon" route="{{ route('purchases.edit', $purchase->uuid) }}"/>
+                            <x-button.show class="btn-icon" route="{{ route('purchases.show', $purchase->id) }}"/>
                         </td>
                     @else
                         <td class="align-middle text-center">
@@ -113,10 +115,14 @@
                             </span>
                         </td>
                         <td class="align-middle text-center" style="width: 10%">
-                            <x-button.show class="btn-icon" route="{{ route('purchases.edit', $purchase->uuid) }}"/>
+                            <x-button.show class="btn-icon" route="{{ route('purchases.show', $purchase->id) }}"/>
                             {{-- <x-button.complete class="btn-icon"  onclick="return confirm('Are you sure to approve purchase no. {{ $purchase->purchase_no }}!') route="{{ route('purchases.update', $purchase->uuid) }}"/> --}}
+                            @can('purchase.approve')
                             <x-button.complete class="btn-icon" route="{{ route('purchases.update', $purchase->uuid) }}" onclick="return confirm('Are you sure to approve purchase no. {{ $purchase->purchase_no }}?')"/>
+                            @endcan
+                            @can('purchase.delete')
                             <x-button.delete class="btn-icon" onclick="return confirm('Are you sure!')" route="{{ route('purchases.delete', $purchase->uuid) }}"/>
+                            @endcan
                         </td>
                     @endif
                 </tr>

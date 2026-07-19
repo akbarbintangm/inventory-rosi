@@ -35,6 +35,7 @@ class UserController extends Controller
         unset($data['password_confirmation']);
 
         $user = User::create($data);
+        $user->syncRoles($data['level']);
 
         /**
          * Handle upload an image
@@ -75,7 +76,9 @@ class UserController extends Controller
 //            $validatedData['email_verified_at'] = null;
 //        }
 
-        $user->update($request->safe()->except('photo'));
+        $data = $request->safe()->except('photo');
+        $user->update($data);
+        $user->syncRoles($data['level']);
 
         /**
          * Handle upload image with Storage.

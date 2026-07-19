@@ -77,7 +77,7 @@
                         <div class="form-control form-control-solid">{{ $purchase->supplier->address }}</div>
                     </div>
 
-                    @if ($purchase->status === \App\Enums\PurchaseStatus::PENDING)
+                    @if ($purchase->status === \App\Enums\PurchaseStatus::PENDING && auth()->user()->can('purchase.approve'))
                     <form action="{{ route('purchases.update', $purchase->uuid) }}" method="POST">
                         @csrf
                         <input type="hidden" name="id" value="{{ $purchase->id }}">

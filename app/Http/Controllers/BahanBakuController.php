@@ -18,7 +18,7 @@ class BahanBakuController extends Controller
 {
     public function index()
     {
-        $bahan= BahanBaku::where("user_id", auth()->id())->count();
+        $bahan = BahanBaku::count();
 
         return view('bahanbakus.index', [
             'bahanbakus' => $bahan,
@@ -30,15 +30,15 @@ class BahanBakuController extends Controller
      */
     public function create(Request $request)
     {
-        $categories = Category::where("user_id", auth()->id())->get(['id', 'name']);
-        $units = Unit::where("user_id", auth()->id())->get(['id', 'name']);
+        $categories = Category::get(['id', 'name']);
+        $units = Unit::get(['id', 'name']);
 
         if ($request->has('category')) {
-            $categories = Category::where("user_id", auth()->id())->whereSlug($request->get('category'))->get();
+            $categories = Category::whereSlug($request->get('category'))->get();
         }
 
         if ($request->has('unit')) {
-            $units = Unit::where("user_id", auth()->id())->whereSlug($request->get('unit'))->get();
+            $units = Unit::whereSlug($request->get('unit'))->get();
         }
 
         return view('bahanbakus.create', [
@@ -60,7 +60,9 @@ class BahanBakuController extends Controller
             $image = $request->file('fotobahan')->store('bahanbakus', 'public');
         }
 
-        BahanBaku::create([
+        $initialStock = (int) $request->stokbahan;
+
+        $material = BahanBaku::create([
             "kodebahan" => IdGenerator::generate([
                 'table' => 'bahan_bakus',
                 'field' => 'kodebahan',
@@ -72,7 +74,7 @@ class BahanBakuController extends Controller
             'namabahan'     => $request->namabahan,
             'category_id'   => $request->category_id,
             'unit_id'       => $request->unit_id,
-            'stokbahan'     => $request->stokbahan,
+            'stokbahan'     => 0,
             'hargabeli'     => $request->hargabeli,
             'detailbahan'   => $request->detailbahan,
             'tanggalmasuk'  =>$request->tanggalmasuk,
@@ -80,6 +82,13 @@ class BahanBakuController extends Controller
             "user_id" => auth()->id(),
             
         ]);
+
+        $material->adjustStock(
+            $initialStock,
+            'opening_balance',
+            userId: auth()->id(),
+            note: 'Stok awal saat bahan baku dibuat.',
+        );
 
 
         return to_route('bahanbakus.index')->with('Berhasil..!', 'Bahan baku telah ditambahkan');
@@ -90,8 +99,6 @@ class BahanBakuController extends Controller
      */
     public function show(BahanBaku $bahanbaku)
     {
-        abort_unless($bahanbaku->user_id === auth()->id(), 404);
-
         // Generate a barcode
         $generator = new BarcodeGeneratorHTML();
 
@@ -108,12 +115,10 @@ class BahanBakuController extends Controller
      */
     public function edit(BahanBaku $bahanbaku)
     {
-        abort_unless($bahanbaku->user_id === auth()->id(), 404);
-
         return view('bahanbakus.edit', [
             'bahan' => $bahanbaku,
-            'categories' => Category::where("user_id", auth()->id())->get(),
-            'units' => Unit::where("user_id", auth()->id())->get(),
+            'categories' => Category::all(),
+            'units' => Unit::all(),
         ]);
     }
 
@@ -122,8 +127,6 @@ class BahanBakuController extends Controller
      */
     public function update(updatebahanbakurequest $request, BahanBaku $bahanbaku)
     {
-        abort_unless($bahanbaku->user_id === auth()->id(), 404);
-
         $image = $bahanbaku->fotobahan;
         if ($request->hasFile('fotobahan')) {
             if ($bahanbaku->fotobahan) {
@@ -133,17 +136,25 @@ class BahanBakuController extends Controller
             $image = $request->file('fotobahan')->store('bahanbakus', 'public');
         }
 
+        $stockChange = (int) $request->stokbahan - (int) $bahanbaku->stokbahan;
+
         $bahanbaku->update([
             'fotobahan' => $image,
             'namabahan' => $request->namabahan,
             'category_id' => $request->category_id,
             'unit_id' => $request->unit_id,
-            'stokbahan' => $request->stokbahan,
             'hargabeli' => $request->hargabeli,
             'detailbahan' => $request->detailbahan,
             'tanggalmasuk' => $request->tanggalmasuk,
             'jenisbahan' => $request->jenisbahan,
         ]);
+
+        $bahanbaku->adjustStock(
+            $stockChange,
+            'manual_adjustment',
+            userId: auth()->id(),
+            note: 'Penyesuaian stok dari formulir edit bahan baku.',
+        );
 
         return redirect()
             ->route('bahanbakus.index')
@@ -155,8 +166,6 @@ class BahanBakuController extends Controller
      */
     public function destroy(BahanBaku $bahanbaku)
     {
-        abort_unless($bahanbaku->user_id === auth()->id(), 404);
-
         if ($bahanbaku->fotobahan) {
             Storage::disk('public')->delete($bahanbaku->fotobahan);
         }

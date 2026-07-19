@@ -4,11 +4,11 @@
     <title>{{ __('Stock alert') }}</title>
 </head>
 <body>
-    <p>{{ 'The following products are gonna out of stock: ' }}</p>
+    <p>Produk berikut sudah mencapai atau melewati batas minimum stok:</p>
     @foreach ($listProducts as $product)
-        <p>{{ __('Product Name: ' . $product->name ) }}<p>
-        <p>{{ __('Current Stock: ' . $product->quantity ) }}<p>
-        <p>{{ __('Alert If Below: ' . $product->quantity_alert ) }}<p>
+        <p>Nama produk: {{ $product->name }}</p>
+        <p>Stok saat ini: {{ $product->quantity }}</p>
+        <p>Batas minimum: {{ $product->quantity_alert }}</p>
         <hr>
     @endforeach
 

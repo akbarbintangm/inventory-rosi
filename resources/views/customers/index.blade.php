@@ -8,6 +8,7 @@
             message="Try adjusting your search or filter to find what you're looking for."
             button_label="{{ __('Add your first Customer') }}"
             button_route="{{ route('customers.create') }}"
+            permission="customer.create"
         />
     @else
         <div class="container-xl">

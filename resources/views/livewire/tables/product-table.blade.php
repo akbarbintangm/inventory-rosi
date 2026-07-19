@@ -7,10 +7,13 @@
         </div>
 
 
+        @can('product.create')
         <div class="card-actions">
             <x-action.create route="{{ route('products.create') }}" />
         </div>
+        @endcan
 
+        @canany(['product.import', 'product.export'])
         <div class="card-actions btn-group">
             <div class="dropdown">
                 <a href="#" class="btn-action dropdown-toggle" data-bs-toggle="dropdown" aria-haspopup="true"
@@ -18,17 +21,22 @@
                     <x-icon.vertical-dots />
                 </a>
                 <div class="dropdown-menu dropdown-menu-end" style="">
+                    @can('product.import')
                     <a href="{{ route('products.import.view') }}" class="dropdown-item">
                         <x-icon.plus />
                         {{ __('Import Products') }}
                     </a>
+                    @endcan
+                    @can('product.export')
                     <a href="{{ route('products.export.store') }}" class="dropdown-item">
                         <x-icon.plus />
                         {{ __('Export Products') }}
                     </a>
+                    @endcan
                 </div>
             </div>
         </div>
+        @endcanany
     </div>
 
     <div class="card-body border-bottom py-3">
@@ -121,9 +129,13 @@
                         </td>
                         <td class="align-middle text-center" style="width: 10%">
                             <x-button.show class="btn-icon" route="{{ route('products.show', $product->uuid) }}" />
+                            @can('product.edit')
                             <x-button.edit class="btn-icon" route="{{ route('products.edit', $product->uuid) }}" />
+                            @endcan
+                            @can('product.delete')
                             <x-button.delete class="btn-icon" route="{{ route('products.destroy', $product->uuid) }}"
                                 onclick="return confirm('Are you sure to delete product {{ $product->name }} ?')" />
+                            @endcan
                         </td>
                     </tr>
                 @empty

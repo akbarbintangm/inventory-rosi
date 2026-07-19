@@ -98,8 +98,12 @@
                         </td>
                         <td class="align-middle text-center" style="width: 15%">
                             <x-button.show class="btn-icon" route="{{ route('products.show', $product->uuid) }}"/>
-                            <x-button.edit class="btn-icon" route="{{ route('products.edit', $product->uuid) }}"/>
-                            <x-button.delete class="btn-icon" route="{{ route('products.destroy', $product->uuid) }}"/>
+                            @can('product.edit')
+                                <x-button.edit class="btn-icon" route="{{ route('products.edit', $product->uuid) }}"/>
+                            @endcan
+                            @can('product.delete')
+                                <x-button.delete class="btn-icon" route="{{ route('products.destroy', $product->uuid) }}"/>
+                            @endcan
                         </td>
                     </tr>
                 @empty

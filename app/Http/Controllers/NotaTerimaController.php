@@ -11,11 +11,11 @@ class NotaTerimaController extends Controller
     public function index()
     {
         return view('notaterima.index', [
-            'products' => Product::where('user_id', auth()->id())
+            'products' => Product::query()
                 ->with(['category', 'unit'])
                 ->orderBy('name')
                 ->get(),
-            'bahanbakus' => BahanBaku::where('user_id', auth()->id())
+            'bahanbakus' => BahanBaku::query()
                 ->with(['category', 'unit'])
                 ->orderBy('namabahan')
                 ->get(),
@@ -35,7 +35,7 @@ class NotaTerimaController extends Controller
         ]);
 
         if ($validatedData['type'] === 'product') {
-            $product = Product::where('user_id', auth()->id())
+            $product = Product::query()
                 ->with('unit')
                 ->findOrFail($validatedData['product_id']);
 
@@ -47,7 +47,7 @@ class NotaTerimaController extends Controller
                 'unit' => $product->unit->name ?? '-',
             ];
         } else {
-            $bahan = BahanBaku::where('user_id', auth()->id())
+            $bahan = BahanBaku::query()
                 ->with('unit')
                 ->findOrFail($validatedData['bahan_baku_id']);
 

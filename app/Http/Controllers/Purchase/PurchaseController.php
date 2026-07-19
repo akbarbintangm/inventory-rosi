@@ -26,7 +26,7 @@ class PurchaseController extends Controller
     public function index()
     {
         return view('purchases.index', [
-            'purchases' => Purchase::where('user_id',auth()->id())->count()
+            'purchases' => Purchase::count()
         ]);
     }
 
@@ -69,8 +69,8 @@ class PurchaseController extends Controller
     public function create()
     {
         return view('purchases.create', [
-            'categories' => Category::where('user_id',auth()->id())->select(['id', 'name'])->get(),
-            'suppliers' => Supplier::where('user_id',auth()->id())->select(['id', 'name'])->get(),
+            'categories' => Category::select(['id', 'name'])->get(),
+            'suppliers' => Supplier::select(['id', 'name'])->get(),
         ]);
     }
 
@@ -128,27 +128,51 @@ class PurchaseController extends Controller
 
     public function update($uuid)
     {
-        $purchase =Purchase::where('uuid',$uuid)->firstOrFail();
-        $products = PurchaseDetails::where('purchase_id', $purchase->id)->get();
+        $approved = DB::transaction(function () use ($uuid) {
+            $purchase = Purchase::query()
+                ->where('uuid', $uuid)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        foreach ($products as $product)
-        {
-            if ($product->bahan_baku_id) {
-                BahanBaku::where('id', $product->bahan_baku_id)
-                    ->update(['stokbahan' => DB::raw('stokbahan+'.$product->quantity)]);
-
-                continue;
+            if ($purchase->status === PurchaseStatus::APPROVED) {
+                return false;
             }
 
-            Product::where('id', $product->product_id)
-                    ->update(['quantity' => DB::raw('quantity+'.$product->quantity)]);
-        }
+            $purchase->load('details.product', 'details.bahanBaku');
 
-        Purchase::findOrFail($purchase->id)
-            ->update([
+            foreach ($purchase->details as $detail) {
+                if ($detail->bahanBaku) {
+                    $detail->bahanBaku->adjustStock(
+                        (int) $detail->quantity,
+                        'purchase_received',
+                        $purchase,
+                        auth()->id(),
+                        "Penerimaan {$purchase->purchase_no}",
+                    );
+
+                    continue;
+                }
+
+                $detail->product?->adjustStock(
+                    (int) $detail->quantity,
+                    'purchase_received',
+                    $purchase,
+                    auth()->id(),
+                    "Penerimaan {$purchase->purchase_no}",
+                );
+            }
+
+            $purchase->update([
                 'status' => PurchaseStatus::APPROVED,
-                'updated_by' => auth()->user()->id
+                'updated_by' => auth()->id(),
             ]);
+
+            return true;
+        });
+
+        if (! $approved) {
+            return redirect()->back()->with('warning', 'Purchase was already approved.');
+        }
 
         return redirect()
             ->back()

@@ -8,6 +8,7 @@
             message="Try adjusting your search or filter to find what you're looking for."
             button_label="{{ __('Add your first Purchase') }}"
             button_route="{{ route('purchases.create') }}"
+            permission="purchase.create"
         />
     @else
         <div class="container-xl">
@@ -20,11 +21,13 @@
                         </h3>
                     </div>
 
+                    @can('purchase.create')
                     <div class="card-actions">
                         <a href="{{ route('purchases.create') }}" class="btn btn-icon btn-outline-success">
                             <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-plus" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M12 5l0 14" /><path d="M5 12l14 0" /></svg>
                         </a>
                     </div>
+                    @endcan
                 </div>
                 <div class="table-responsive">
                     <table class="table table-bordered card-table table-vcenter text-nowrap datatable">

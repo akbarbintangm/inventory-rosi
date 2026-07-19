@@ -34,7 +34,7 @@ class SupplierTable extends Component
     public function render()
     {
         return view('livewire.tables.supplier-table', [
-            'suppliers' => Supplier::where("user_id", auth()->id())
+            'suppliers' => Supplier::query()
                 ->with(['purchases'])
                 ->search($this->search)
                 ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')

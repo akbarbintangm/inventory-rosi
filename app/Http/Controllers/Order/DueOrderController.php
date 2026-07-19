@@ -6,10 +6,12 @@ use App\Models\Customer;
 use App\Models\Order;
 use App\Models\OrderDetails;
 use App\Models\Product;
-use App\Models\User;
 use App\Http\Controllers\Controller;
-use App\Mail\StockAlert;
+use App\Enums\OrderStatus;
+use App\Services\LowStockNotifier;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class DueOrderController extends Controller
 {
@@ -46,49 +48,61 @@ class DueOrderController extends Controller
         ]);
     }
 
-    public function update(Order $order, Request $request)
+    public function update(Order $order, Request $request, LowStockNotifier $notifier)
     {
         $rules = [
-            'pay' => 'required|numeric'
+            'pay' => 'required|numeric|min:0.01'
         ];
 
         $validatedData = $request->validate($rules);
 
-        $mainPay = $order->pay;
-        $mainDue = $order->due;
+        $lowStockIds = DB::transaction(function () use ($order, $validatedData) {
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            $payment = (float) $validatedData['pay'];
 
-        $paidDue = $mainDue - $validatedData['pay'];
-        $paidPay = $mainPay + $validatedData['pay'];
+            if ($payment > (float) $order->due) {
+                throw ValidationException::withMessages([
+                    'pay' => 'Pembayaran tidak boleh melebihi sisa tagihan.',
+                ]);
+            }
 
-        $order->update([
-            'due' => $paidDue,
-            'pay' => $paidPay
-        ]);
-        // no more due
-        if ($paidDue == 0) {
+            $paidDue = (float) $order->due - $payment;
+            $paidPay = (float) $order->pay + $payment;
+
             $order->update([
-                'order_status' => 1
+                'due' => $paidDue,
+                'pay' => $paidPay,
             ]);
-            $products = OrderDetails::where('order_id', $order->id)->get();
 
-            $stockAlertProducts = [];
-
-            foreach ($products as $product) {
-                $productEntity = Product::where('id', $product->product_id)->first();
-                $newQty = $productEntity->quantity - $product->quantity;
-                if ($newQty < $productEntity->quantity_alert) {
-                    $stockAlertProducts[] = $productEntity;
-                }
-                $productEntity->update(['quantity' => $newQty]);
+            if ($paidDue != 0 || $order->order_status === OrderStatus::COMPLETE) {
+                return [];
             }
 
-            if (count($stockAlertProducts) > 0) {
-                $listAdmin = [];
-                foreach (User::all('email') as $admin) {
-                    $listAdmin [] = $admin->email;
+            $order->load('details.product');
+            $lowStockIds = [];
+
+            foreach ($order->details as $detail) {
+                $product = $detail->product;
+                $product->adjustStock(
+                    -((int) $detail->quantity),
+                    'order_completed',
+                    $order,
+                    auth()->id(),
+                    "Pelunasan pesanan {$order->invoice_no}",
+                );
+
+                if ($product->quantity <= $product->quantity_alert) {
+                    $lowStockIds[] = $product->id;
                 }
-                Mail::to($listAdmin)->send(new StockAlert($stockAlertProducts));
             }
+
+            $order->update(['order_status' => OrderStatus::COMPLETE]);
+
+            return $lowStockIds;
+        });
+
+        if ($lowStockIds !== []) {
+            $notifier->send(Product::whereIn('id', $lowStockIds)->get());
         }
 
         return redirect()

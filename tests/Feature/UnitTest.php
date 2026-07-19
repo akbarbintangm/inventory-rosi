@@ -41,7 +41,7 @@ class UnitTest extends TestCase
         $user = $this->createUser();
         $this->actingAs($user)->get('units/create');
 
-        Unit::create([
+        Unit::factory()->create([
             'name' => 'Piece',
             'slug' => 'piece',
             'short_code' => 'pc'
@@ -52,7 +52,7 @@ class UnitTest extends TestCase
 
     public function test_edit_unit()
     {
-        Unit::create([
+        Unit::factory()->create([
             'name' => 'Piece',
             'slug' => 'piece',
             'short_code' => 'pc'
@@ -88,7 +88,7 @@ class UnitTest extends TestCase
 
     public function test_show_unit()
     {
-        $unit = Unit::create([
+        $unit = Unit::factory()->create([
             'name' => 'Piece',
             'slug' => 'piece',
             'short_code' => 'pc'
@@ -112,12 +112,12 @@ class UnitTest extends TestCase
 
         $response = $this->actingAs($user)->put('units/' . $unit->slug, [
             'name' => "",
-            'slug' => ""
+            'short_code' => ""
         ]);
 
         $response->assertStatus(302);
-        $response->assertInvalid(['name', 'slug']);
-        $response->assertSessionHasErrors(['name', 'slug']);
+        $response->assertInvalid(['name', 'short_code']);
+        $response->assertSessionHasErrors(['name', 'short_code']);
     }
 
     public function test_update_unit()
@@ -133,7 +133,7 @@ class UnitTest extends TestCase
 
         $response = $this->actingAs($user)->put('units/' . $unit->slug, [
             'name' => 'Meter',
-            'slug' => 'meter'
+            'short_code' => 'm'
         ]);
 
         $this->assertDatabaseHas('units', [
@@ -147,7 +147,7 @@ class UnitTest extends TestCase
     {
         $this->withoutExceptionHandling();
 
-        $unit = Unit::create([
+        $unit = Unit::factory()->create([
             'name' => 'Piece',
             'slug' => 'piece',
             'short_code' => 'pc'

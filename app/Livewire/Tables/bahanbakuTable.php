@@ -34,7 +34,7 @@ class bahanbakuTable extends Component
     public function render()
     {
         return view('livewire.tables.bahanbaku-table', [
-            'bahan_bakus' => BahanBaku::where("user_id",auth()->id())
+            'bahan_bakus' => BahanBaku::query()
                 ->with(['category', 'unit'])
                 ->search($this->search)
                 ->orderBy($this->sortField, $this->sortAsc ? 'asc' : 'desc')

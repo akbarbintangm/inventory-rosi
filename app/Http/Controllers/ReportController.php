@@ -54,7 +54,7 @@ class ReportController extends Controller
 
         if ($validatedData['report_type'] === 'products') {
             $headers = ['Nama Barang', 'Kode Barang', 'Stok'];
-            $rows = Product::where('user_id', auth()->id())
+            $rows = Product::query()
                 ->orderBy('name')
                 ->get()
                 ->map(fn (Product $product) => [
@@ -76,7 +76,7 @@ class ReportController extends Controller
 
         if ($validatedData['report_type'] === 'bahan') {
             $headers = ['Nama Bahan', 'Kode Bahan', 'Stok'];
-            $rows = BahanBaku::where('user_id', auth()->id())
+            $rows = BahanBaku::query()
                 ->orderBy('namabahan')
                 ->get()
                 ->map(fn (BahanBaku $bahan) => [
@@ -96,7 +96,7 @@ class ReportController extends Controller
             ];
         }
 
-        $query = Order::where('user_id', auth()->id())
+        $query = Order::query()
             ->with(['customer', 'details.product'])
             ->orderBy('order_date');
 

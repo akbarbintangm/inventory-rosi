@@ -20,7 +20,7 @@ class PurchaseForm extends Component
 
     public function mount(): void
     {
-        $this->allProducts = BahanBaku::where("user_id",auth()->id())->get();
+        $this->allProducts = BahanBaku::all();
     }
 
     public function render(): View

@@ -11,7 +11,7 @@ class CustomerController extends Controller
 {
     public function index()
     {
-        $customers = Customer::where('user_id', auth()->id())->count();
+        $customers = Customer::count();
 
         return view('customers.index', [
             'customers' => $customers
@@ -56,7 +56,7 @@ class CustomerController extends Controller
 
     public function show($uuid)
     {
-        $customer = Customer::where('uuid', $uuid)->firstOrFail();
+        $customer = Customer::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
         $customer->loadMissing(['quotations', 'orders'])->get();
 
         return view('customers.show', [
@@ -66,7 +66,7 @@ class CustomerController extends Controller
 
     public function edit($uuid)
     {
-        $customer = Customer::where('uuid', $uuid)->firstOrFail();
+        $customer = Customer::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
         return view('customers.edit', [
             'customer' => $customer
         ]);
@@ -74,7 +74,7 @@ class CustomerController extends Controller
 
     public function update(UpdateCustomerRequest $request, $uuid)
     {
-        $customer = Customer::where('uuid', $uuid)->firstOrFail();
+        $customer = Customer::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
 
         /**
          * Handle upload image with Storage.
@@ -107,7 +107,7 @@ class CustomerController extends Controller
 
     public function destroy($uuid)
     {
-        $customer = Customer::where('uuid', $uuid)->firstOrFail();
+        $customer = Customer::where('uuid', $uuid)->orWhere('id', $uuid)->firstOrFail();
         if ($customer->photo) {
             unlink(public_path('storage/') . $customer->photo);
         }

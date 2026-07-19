@@ -1,118 +1,60 @@
-## ✨ Inventory Management System
+# Inventory ROSI
 
-Inventory Management System with Laravel 10 and MySql.
+Sistem manajemen persediaan PT ABC berbasis Laravel 10 dan MySQL. Aplikasi mencakup POS, pesanan pelanggan, pembelian, quotation, produk, bahan baku, pelanggan, pemasok, laporan, serta kontrol akses berbasis role dan permission.
 
-![Dashboard](https://user-images.githubusercontent.com/71541409/236858603-89e4be74-0a8b-4b4b-98b0-24e66ec5602d.png)
+## Role dan permission
 
-## 💀 Design Database
-![Diagram Class](https://github.com/fajarghifar/inventory-management-system/assets/71541409/0c7d4163-96f5-4724-8741-4615e52ecf98)
+Aplikasi memiliki tiga role sesuai rancangan skripsi:
 
-## 😎 Features
-- POS
-- Orders
-  - Pending Orders
-  - Complete Orders
-  - Pending Due
-- Purchases
-  - All Purchases
-  - Approval Purchases
-  - Purchase Report
-- Products
-- Customers
-- Suppliers
+- `owner`: akses penuh, termasuk manajemen pengguna, penghapusan master data, dan persetujuan pembelian.
+- `manager_pic`: mengelola produk, bahan baku, pemasok, pembelian, quotation, dan laporan tanpa hak hapus atau persetujuan pembelian.
+- `admin`: mengelola pelanggan, POS/pesanan, nota terima, kategori, dan satuan; serta dapat melihat data persediaan dan laporan umum.
 
-## 🚀 How to Use
+Hak akses diperiksa pada route/controller dan elemen antarmuka. Role lama pada kolom `users.level` disinkronkan oleh `RolePermissionSeeder` agar kompatibel dengan data yang sudah ada.
 
-1. Clone Repository
+## Audit stok dan peringatan stok minimum
+
+Setiap perubahan stok produk atau bahan baku dicatat pada tabel `stock_mutations`, termasuk stok sebelum/sesudah, jumlah perubahan, tipe transaksi, referensi transaksi, catatan, dan pengguna pelaksana. Persetujuan pembelian serta penyelesaian/cancel transaksi dibuat idempoten agar stok tidak berubah dua kali.
+
+Peringatan stok minimum dapat dijalankan secara manual:
 
 ```bash
-git clone https://github.com/fajarghifar/inventory-management-system
+php artisan inventory:low-stock-alert
 ```
 
-2. Go into the repository 
+Gunakan `--dry-run` untuk memeriksa jumlah produk di bawah batas tanpa mengirim email. Scheduler menjalankan pemeriksaan setiap hari pukul 08.00; pada server produksi, aktifkan Laravel scheduler melalui cron atau task scheduler.
 
-```bash
-cd inventory-management-system
-```
-
-3. Install Packages 
+## Instalasi
 
 ```bash
 composer install
-```
-
-
-4. Copy `.env` file 
-
-```bash
-
 cp .env.example .env
-
-```
-
-5. Generate app key 
-
-```bash
 php artisan key:generate
-```
-
-6. Setting up your database credentials in your `.env` file.
-7. Seed Database: 
-
-```bash
-
-php artisan migrate:fresh --seed
-
-```
-8. Create Storage Link
-
-```bash
+php artisan migrate --seed
 php artisan storage:link
-```
-
-9. Install NPM dependencies 
-
-```bash
-
-npm install && npm run dev
-
-```
-10. Run 
-
-```bash
-
+npm install
+npm run build
 php artisan serve
-
 ```
-11. Try login with email: 
+
+Atur koneksi database dan konfigurasi email pada `.env` sebelum migrasi. Akun awal dari seeder menggunakan email `admin@admin.com` dan password `password`; ubah password setelah login pertama.
+
+Jika aplikasi lama sudah memiliki tabel dan pengguna, jalankan:
 
 ```bash
-
-admin@admin.com
-
+php artisan migrate
+php artisan db:seed --class=RolePermissionSeeder
+php artisan optimize:clear
 ```
-and password: 
+
+## Pengujian
 
 ```bash
-
-password
-
+php artisan test
 ```
 
-## 🚀 Config
+Test mencakup autentikasi, CRUD utama, matriks role/permission, pencatatan mutasi stok, pencegahan stok negatif, dan idempotensi persetujuan pembelian.
 
-1. **Config Chart**
+## Lisensi
 
-    Open file `./config/cart.php`. You can set a tax, format number, etc.
-    > For More details, visit this link [hardevine/shoppingcart](https://packagist.org/packages/hardevine/shoppingcart).
-
-## 📝 Contributing
-
-If you have any ideas to make it more interesting, please send a PR or create an issue for a feature request.
-
-# 🤝 License
-
-### [MIT](LICENSE)
-
-> Github [@fajarghifar](https://github.com/fajarghifar) &nbsp;&middot;&nbsp;
-> Instagram [@fajarghifar](https://instagram.com/fajarghifar)
+Proyek ini mempertahankan lisensi [MIT](LICENSE) dari aplikasi dasar.
